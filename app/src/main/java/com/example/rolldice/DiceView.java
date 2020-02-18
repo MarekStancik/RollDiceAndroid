@@ -4,14 +4,26 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.LinearLayout;
+
+import androidx.constraintlayout.widget.ConstraintSet;
 
 import java.util.Random;
+import java.util.zip.Inflater;
 
 public class DiceView extends View {
 
-    private static final float DotRadius = 10f;
-    private static final int [] colors = { Color.GREEN, Color.RED, Color.BLUE, Color.MAGENTA, Color.YELLOW,Color.CYAN};
+    private float DotRadius;
+    private static final int [] colors = {
+            Color.parseColor("#1925EB"),
+            Color.parseColor("#1D65A6"),
+            Color.parseColor("#72A2C0"),
+            Color.parseColor("#00743F"),
+            Color.parseColor("#F2A104"),
+            Color.parseColor("#040C0E")};
     private Paint paint;
     private Dice dice;
 
@@ -94,7 +106,9 @@ public class DiceView extends View {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
-        paint.setColor(colors[new Random().nextInt(colors.length)]);
+        this.DotRadius = (getWidth() + getHeight()) / 20;
+
+        paint.setColor(colors[1]); //dice.getValue() -1
         canvas.drawPaint(paint);
         paint.setColor(Color.WHITE);
 

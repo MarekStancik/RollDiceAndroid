@@ -1,9 +1,11 @@
 package com.example.rolldice;
 
+import androidx.annotation.NonNull;
+
 public class Dice{
     private int value;
 
-    public Dice(int value){
+    public Dice(int value) {
         setValue(value);
     }
 

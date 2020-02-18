@@ -1,6 +1,9 @@
 package com.example.rolldice;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.constraintlayout.widget.ConstraintLayout;
 
 import android.content.Context;
 import android.graphics.Canvas;
@@ -11,11 +14,14 @@ import android.os.Message;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.w3c.dom.Text;
 
@@ -30,10 +36,10 @@ public class MainActivity extends AppCompatActivity {
     private Button btnIncrement,btnDecrement,btnRoll;
     private LinearLayout layDices;
     private TextView txtDiceCount,txtResult;
+    private ArrayList<Dice> dices;
+    private RollAdapter arrayAdapter;
+    private ArrayList<Roll> results;
     private ListView listView;
-    private List<Dice> dices;
-    private ArrayAdapter arrayAdapter;
-    private ArrayList<String> results;
 
     private DiceView createDiceView(Dice dice)
     {
@@ -60,9 +66,17 @@ public class MainActivity extends AppCompatActivity {
         }
 
         //Update Result
-        txtResult.setText("RESULT: " + result);
-        results.add(Integer.toString(result));
+        txtResult.setText(Integer.toString(result));
+
+        ArrayList<Dice> copyDices = new ArrayList<>(dices.size());
+
+        for (Dice dice: dices) {
+            copyDices.add(new Dice(dice.getValue()));
+        }
+
+        results.add(new Roll(result,copyDices));
         arrayAdapter.notifyDataSetChanged();
+        listView.setSelection(arrayAdapter.getCount() -1);
     }
 
     private void updateCountText()
@@ -142,13 +156,65 @@ public class MainActivity extends AppCompatActivity {
 
         listView = findViewById(R.id.listView);
 
-        arrayAdapter = new ArrayAdapter<String>(
-                this,
-                android.R.layout.simple_list_item_1,
-                results);
+        listView.setOnItemClickListener((AdapterView<?> parent, View view, int position, long id) -> {
+            Roll roll = results.get(position);
+            String text;
+            if(roll.getScore() / roll.getDices().size() > 3){
+                text = "That was Super Amazing Roll";
+            }
+            else
+                text = "That was pretty lame Roll";
+
+            Toast.makeText(this, text,
+                    Toast.LENGTH_SHORT).show();
+        });
+
+        arrayAdapter = new RollAdapter(this,results);
 
         listView.setAdapter(arrayAdapter);
 
         addDice();
+    }
+}
+
+class RollAdapter extends ArrayAdapter<Roll>{
+
+    private ArrayList<Roll> rolls;
+
+    public RollAdapter(@NonNull Context context, @NonNull ArrayList<Roll> rolls) {
+        super(context, 0, rolls);
+        this.rolls = rolls;
+    }
+
+    @NonNull
+    @Override
+    public View getView(int position, @Nullable View view, @NonNull ViewGroup parent) {
+
+        if(view == null)
+        {
+            //Obtain inflater
+            LayoutInflater inflater = (LayoutInflater) getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+
+            view = inflater.inflate(R.layout.list_view_record,null);
+        }
+
+        Roll roll = rolls.get(position);
+
+        TextView txtScore = view.findViewById(R.id.txtScore);
+        txtScore.setText("Score: " + roll.getScore());
+
+
+        LinearLayout dicesLayout = view.findViewById(R.id.layDicesListItem);
+        List<Dice> dices = roll.getDices();
+        dicesLayout.removeAllViews();
+        for (Dice dice :dices) {
+            DiceView dw = new DiceView(getContext(),dice);
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(80, LinearLayout.LayoutParams.MATCH_PARENT);
+            params.setMargins(5,5,5,5);
+            dw.setLayoutParams(params);
+            dicesLayout.addView(dw);
+        }
+
+        return view;
     }
 }
