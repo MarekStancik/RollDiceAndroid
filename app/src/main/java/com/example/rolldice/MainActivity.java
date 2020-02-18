@@ -11,156 +11,29 @@ import android.os.Message;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.TextView;
 
 import org.w3c.dom.Text;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.stream.IntStream;
-
-class Dice{
-    private int value;
-
-    public Dice(int value){
-        setValue(value);
-    }
-
-    public void setValue(int value) {
-        if(value > 0 && value < 7)
-            this.value = value;
-        else
-            this.value = 1;
-    }
-
-    public int getValue() {
-        return value;
-    }
-}
-
-class DiceView extends View{
-
-    private static final float DotRadius = 10f;
-    private static final int [] colors = { Color.GREEN, Color.RED, Color.BLUE, Color.MAGENTA, Color.YELLOW,Color.CYAN};
-    private Paint paint;
-    private Dice dice;
-
-    private void init()
-    {
-        paint = new Paint();
-        paint.setStyle(Paint.Style.FILL);
-    }
-
-    public DiceView(Context context,Dice dice) {
-        super(context);
-        this.dice = dice;
-        init();
-    }
-
-    private void drawOne(Canvas canvas)
-    {
-        float x = getWidth();
-        float y = getHeight();
-        canvas.drawCircle(x/2,y/2,DotRadius,paint);
-    }
-
-    private void drawTwo(Canvas canvas)
-    {
-        float x = getWidth();
-        float y = getHeight();
-        canvas.drawCircle(x/4,y/2,DotRadius,paint);
-        canvas.drawCircle(x/4 * 3,y/2,DotRadius,paint);
-    }
-
-    private void drawThree(Canvas canvas)
-    {
-        float x = getWidth();
-        float y = getHeight();
-        float thirdX = x * 0.8f /3f;
-        float thirdY = y * 0.8f /3f;
-        canvas.drawCircle(thirdX,thirdY,DotRadius,paint);
-        canvas.drawCircle(thirdX*2,thirdY*2,DotRadius,paint);
-        canvas.drawCircle(thirdX*3,thirdY*3,DotRadius,paint);
-    }
-
-    private void drawFour(Canvas canvas)
-    {
-        float x = getWidth();
-        float y = getHeight();
-        float quarterX = x/4;
-        float quarterY = y/4;
-        canvas.drawCircle(quarterX,quarterY,DotRadius,paint);
-        canvas.drawCircle(quarterX*3,quarterY,DotRadius,paint);
-        canvas.drawCircle(quarterX,quarterY*3,DotRadius,paint);
-        canvas.drawCircle(quarterX*3,quarterY*3,DotRadius,paint);
-    }
-
-    private void drawFive(Canvas canvas)
-    {
-        float x = getWidth();
-        float y = getHeight();
-        drawThree(canvas);
-        float thirdX = x * 0.8f /3f;
-        float thirdY = y * 0.8f /3f;
-        canvas.drawCircle(thirdX *3,thirdY,DotRadius,paint);
-        canvas.drawCircle(thirdX,thirdY*3,DotRadius,paint);
-    }
-
-    private void drawSix(Canvas canvas)
-    {
-        float x = getWidth();
-        float y = getHeight();
-        float quarterX = x/4;
-        float sixthY = y/6;
-        canvas.drawCircle(quarterX,sixthY,DotRadius,paint);
-        canvas.drawCircle(quarterX*3,sixthY,DotRadius,paint);
-        canvas.drawCircle(quarterX,sixthY*3,DotRadius,paint);
-        canvas.drawCircle(quarterX*3,sixthY*3,DotRadius,paint);
-        canvas.drawCircle(quarterX,sixthY*5,DotRadius,paint);
-        canvas.drawCircle(quarterX*3,sixthY*5,DotRadius,paint);
-    }
-
-    @Override
-    protected void onDraw(Canvas canvas) {
-        super.onDraw(canvas);
-
-        paint.setColor(colors[new Random().nextInt(colors.length)]);
-        canvas.drawPaint(paint);
-        paint.setColor(Color.WHITE);
-
-
-        switch (dice.getValue()) {
-            case 1:
-                drawOne(canvas);
-                break;
-            case 2:
-                drawTwo(canvas);
-                break;
-            case 3:
-                drawThree(canvas);
-                break;
-            case 4:
-                drawFour(canvas);
-                break;
-            case 5:
-                drawFive(canvas);
-                break;
-            case 6:
-                drawSix(canvas);
-                break;
-        }
-    }
-}
 
 public class MainActivity extends AppCompatActivity {
 
     private Button btnIncrement,btnDecrement,btnRoll;
     private LinearLayout layDices;
     private TextView txtDiceCount,txtResult;
+    private ListView listView;
     private List<Dice> dices;
+    private ArrayAdapter arrayAdapter;
+    private ArrayList<String> results;
 
     private DiceView createDiceView(Dice dice)
     {
@@ -173,43 +46,33 @@ public class MainActivity extends AppCompatActivity {
 
     private void rollDices()
     {
-        for(Dice dice: dices){
-            dice.setValue(new Random().nextInt(6) + 1);
-        }
-        updateDices();
-    }
-
-    private void updateTexts()
-    {
-        txtDiceCount.setText("" + dices.size());
-
         int result = 0;
         for(Dice dice: dices){
-            result += dice.getValue();
+            int newValue = new Random().nextInt(6) + 1;
+            dice.setValue(newValue);
+            result += newValue;
         }
+
+        //Update Dices
+        for (int i = 0; i < layDices.getChildCount(); ++i){
+            View child = layDices.getChildAt(i);
+            child.invalidate();
+        }
+
+        //Update Result
         txtResult.setText("RESULT: " + result);
+        results.add(Integer.toString(result));
+        arrayAdapter.notifyDataSetChanged();
+    }
+
+    private void updateCountText()
+    {
+        txtDiceCount.setText(Integer.toString(dices.size()));
     }
 
     private void updateDices()
     {
-        int childCount = layDices.getChildCount();
-        Dice lastDice = dices.get(dices.size()-1);
-
-        if(dices.size() > childCount){
-            layDices.addView(createDiceView(lastDice));
-        }
-        else if(dices.size() < childCount){
-            layDices.removeView(layDices.getChildAt( childCount- 1));
-        }
-        else{
-            //Size is the same so roll occurred
-            for (int i = 0; i < childCount; ++i){
-                View child = layDices.getChildAt(i);
-                child.invalidate();
-            }
-        }
-
-        updateTexts();
+        updateCountText();
         updateButtons();
     }
 
@@ -222,7 +85,9 @@ public class MainActivity extends AppCompatActivity {
     private void addDice()
     {
         if(dices.size() < 8){
-            dices.add(new Dice(1));
+            Dice newDice = new Dice(1);
+            dices.add(newDice);
+            layDices.addView(createDiceView(newDice));
             updateDices();
         }
     }
@@ -232,6 +97,7 @@ public class MainActivity extends AppCompatActivity {
         if(dices.size() > 1)
         {
             dices.remove(dices.size()-1);
+            layDices.removeView(layDices.getChildAt(dices.size()));
             updateDices();
         }
     }
@@ -267,11 +133,21 @@ public class MainActivity extends AppCompatActivity {
 
         //Member attributes initialization
         dices = new ArrayList<>();
+        results = new ArrayList<>();
 
         //Setup references to the view elements
         setupLayouts();
         setupButtons();
         setupTexts();
+
+        listView = findViewById(R.id.listView);
+
+        arrayAdapter = new ArrayAdapter<String>(
+                this,
+                android.R.layout.simple_list_item_1,
+                results);
+
+        listView.setAdapter(arrayAdapter);
 
         addDice();
     }

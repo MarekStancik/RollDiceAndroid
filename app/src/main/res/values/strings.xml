@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">RollDice</string>
     <string name="rollText">Roll !!</string>
+    <string name="title_activity_list1">ListActivity1</string>
 </resources>
