@@ -2,7 +2,9 @@ package com.example.rolldice;
 
 import androidx.annotation.NonNull;
 
-public class Dice{
+import java.io.Serializable;
+
+public class Dice implements Serializable {
     private int value;
 
     public Dice(int value) {

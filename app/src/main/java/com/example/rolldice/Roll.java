@@ -1,8 +1,9 @@
 package com.example.rolldice;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 
-public class Roll {
+public class Roll implements Serializable {
 
     private int score;
     private ArrayList<Dice> dices;

@@ -3,43 +3,71 @@ package com.example.rolldice;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.constraintlayout.widget.ConstraintLayout;
 
-import android.content.Context;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Paint;
+import android.content.Intent;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.os.Bundle;
-import android.os.Message;
-import android.util.Log;
-import android.view.LayoutInflater;
+import android.os.Handler;
+import android.os.PersistableBundle;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import org.w3c.dom.Text;
-
 import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
-import java.util.stream.IntStream;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity{
 
-    private Button btnIncrement,btnDecrement,btnRoll;
+    private final static int ACTIVITY_HISTORY_ID = 123;
+    private Button btnIncrement,btnDecrement,/*btnRoll,*/btnHistory;
     private LinearLayout layDices;
-    private TextView txtDiceCount,txtResult;
+    private TextView txtDiceCount,/*txtResult,*/txtBigResult;
     private ArrayList<Dice> dices;
-    private RollAdapter arrayAdapter;
     private ArrayList<Roll> results;
-    private ListView listView;
+    private boolean isRolling = false;
+
+    //https://stackoverflow.com/questions/2317428/how-to-refresh-app-upon-shaking-the-device
+    private SensorManager mSensorManager;
+    private float mAccel; // acceleration apart from gravity
+    private float mAccelCurrent; // current acceleration including gravity
+    private float mAccelLast; // last acceleration including gravity
+
+    private final SensorEventListener mSensorListener = new SensorEventListener() {
+
+        public void onSensorChanged(SensorEvent se) {
+            float x = se.values[0];
+            float y = se.values[1];
+            float z = se.values[2];
+            mAccelLast = mAccelCurrent;
+            mAccelCurrent = (float) Math.sqrt((double) (x*x + y*y + z*z));
+            float delta = mAccelCurrent - mAccelLast;
+            mAccel = mAccel * 0.9f + delta; // perform low-cut filter
+
+            if (mAccel > 12 && !isRolling) {
+                isRolling = true;
+                txtBigResult.setText(getResources().getString(R.string.rolling));
+                Handler handler = new Handler();
+                handler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        isRolling = false;
+                        rollDices();
+                    }
+                }, 2000);
+            }
+        }
+
+        public void onAccuracyChanged(Sensor sensor, int accuracy) {
+        }
+    };
 
     private DiceView createDiceView(Dice dice)
     {
@@ -66,17 +94,14 @@ public class MainActivity extends AppCompatActivity {
         }
 
         //Update Result
-        txtResult.setText(Integer.toString(result));
+        //txtResult.setText(Integer.toString(result));
+        txtBigResult.setText(Integer.toString(result));
 
         ArrayList<Dice> copyDices = new ArrayList<>(dices.size());
 
-        for (Dice dice: dices) {
-            copyDices.add(new Dice(dice.getValue()));
-        }
+        copyDices.addAll(dices);
 
         results.add(new Roll(result,copyDices));
-        arrayAdapter.notifyDataSetChanged();
-        listView.setSelection(arrayAdapter.getCount() -1);
     }
 
     private void updateCountText()
@@ -116,17 +141,26 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void openHistory()
+    {
+        Intent x = new Intent(this, HistoryListActivity.class);
+        x.putExtra("rolls",this.results);
+        startActivityForResult(x, ACTIVITY_HISTORY_ID);
+    }
+
     private void setupButtons()
     {
         //Setting up references
         this.btnIncrement = findViewById(R.id.btnIncrementDice);
         this.btnDecrement = findViewById(R.id.bntDecrementDice);
-        this.btnRoll = findViewById(R.id.btnRoll);
+      //  this.btnRoll = findViewById(R.id.btnRoll);
+        this.btnHistory = findViewById(R.id.btnHistory);
 
         //Setting up actions
         btnIncrement.setOnClickListener((View v)->addDice());
         btnDecrement.setOnClickListener((View v)->removeDice());
-        btnRoll.setOnClickListener((View v)->rollDices());
+   //     btnRoll.setOnClickListener((View v)->rollDices());
+        btnHistory.setOnClickListener((View v)->openHistory());
     }
 
     private void setupLayouts() {
@@ -135,9 +169,18 @@ public class MainActivity extends AppCompatActivity {
 
     private void setupTexts() {
         txtDiceCount = findViewById(R.id.txtDicesCount);
-        txtResult = findViewById(R.id.txtResult);
+     //   txtResult = findViewById(R.id.txtResult);
+        txtBigResult = findViewById(R.id.txtBigResult);
     }
 
+    private void setupSensorManager()
+    {
+        mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+        mSensorManager.registerListener(mSensorListener, mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER), SensorManager.SENSOR_DELAY_NORMAL);
+        mAccel = 0.00f;
+        mAccelCurrent = SensorManager.GRAVITY_EARTH;
+        mAccelLast = SensorManager.GRAVITY_EARTH;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -148,73 +191,45 @@ public class MainActivity extends AppCompatActivity {
         //Member attributes initialization
         dices = new ArrayList<>();
         results = new ArrayList<>();
+        setupSensorManager();
 
         //Setup references to the view elements
         setupLayouts();
         setupButtons();
         setupTexts();
 
-        listView = findViewById(R.id.listView);
-
-        listView.setOnItemClickListener((AdapterView<?> parent, View view, int position, long id) -> {
-            Roll roll = results.get(position);
-            String text;
-            if(roll.getScore() / roll.getDices().size() > 3){
-                text = "That was Super Amazing Roll";
-            }
-            else
-                text = "That was pretty lame Roll";
-
-            Toast.makeText(this, text,
-                    Toast.LENGTH_SHORT).show();
-        });
-
-        arrayAdapter = new RollAdapter(this,results);
-
-        listView.setAdapter(arrayAdapter);
-
         addDice();
     }
-}
 
-class RollAdapter extends ArrayAdapter<Roll>{
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
 
-    private ArrayList<Roll> rolls;
-
-    public RollAdapter(@NonNull Context context, @NonNull ArrayList<Roll> rolls) {
-        super(context, 0, rolls);
-        this.rolls = rolls;
+        if(requestCode == ACTIVITY_HISTORY_ID)
+        {
+            switch (resultCode)
+            {
+                case RESULT_OK:
+                    Bundle bundle = data.getExtras();
+                    this.results = (ArrayList<Roll>) bundle.getSerializable("rolls");
+                    break;
+                case RESULT_CANCELED:
+                    break;
+            }
+        }
     }
 
-    @NonNull
+    //To register listener on resume
     @Override
-    public View getView(int position, @Nullable View view, @NonNull ViewGroup parent) {
+    protected void onResume() {
+        super.onResume();
+        mSensorManager.registerListener(mSensorListener, mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER), SensorManager.SENSOR_DELAY_NORMAL);
+    }
 
-        if(view == null)
-        {
-            //Obtain inflater
-            LayoutInflater inflater = (LayoutInflater) getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-
-            view = inflater.inflate(R.layout.list_view_record,null);
-        }
-
-        Roll roll = rolls.get(position);
-
-        TextView txtScore = view.findViewById(R.id.txtScore);
-        txtScore.setText("Score: " + roll.getScore());
-
-
-        LinearLayout dicesLayout = view.findViewById(R.id.layDicesListItem);
-        List<Dice> dices = roll.getDices();
-        dicesLayout.removeAllViews();
-        for (Dice dice :dices) {
-            DiceView dw = new DiceView(getContext(),dice);
-            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(80, LinearLayout.LayoutParams.MATCH_PARENT);
-            params.setMargins(5,5,5,5);
-            dw.setLayoutParams(params);
-            dicesLayout.addView(dw);
-        }
-
-        return view;
+    //Unregister listener on pause to save resources and not trigger in second activity
+    @Override
+    protected void onPause() {
+        mSensorManager.unregisterListener(mSensorListener);
+        super.onPause();
     }
 }
