@@ -4,15 +4,18 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@drawable/background"
     tools:context=".HistoryListActivity">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+
         android:orientation="horizontal"
         android:layout_weight="0.1">
         <ListView
             android:id="@+id/listView"
+            android:theme="@style/TextAppearance.AppCompat.Widget.PopupMenu.Small"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"/>
     </LinearLayout>
@@ -25,14 +28,32 @@
         <Button
             android:id="@+id/btnClose"
             android:text="@string/back"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
+            android:background="@drawable/button_history"
+            android:textColor="#FFFFFF"
+            android:textSize="24sp"
+            android:layout_width="128dp"
+            android:layout_height="60dp"
+            android:shadowColor="#7A7A7A"
+            android:shadowDx="5"
+            android:shadowDy="5"
+            android:shadowRadius="5">
+
+        </Button>
 
         <Button
             android:id="@+id/btnClearHistory"
             android:text="@string/clear"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
+            android:background="@drawable/button_history"
+            android:textColor="#FFFFFF"
+            android:textSize="24sp"
+            android:layout_width="128dp"
+            android:layout_height="60dp"
+            android:shadowColor="#7A7A7A"
+            android:shadowDx="5"
+            android:shadowDy="5"
+            android:shadowRadius="5">
+
+        </Button>
     </LinearLayout>
 
 

@@ -4,7 +4,9 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".MainActivity"
+    android:background="@drawable/background"
     android:orientation="vertical">
+
 
     <LinearLayout
         android:id="@+id/layDices"
@@ -20,11 +22,16 @@
 
         <Button
             android:id="@+id/btnIncrementDice"
+            android:text="+"
+            android:background="@drawable/button_history"
+            android:textColor="#FFFFFF"
+            android:textSize="24sp"
             android:layout_width="80dp"
             android:layout_height="40dp"
-            style="@android:style/Widget.Button.Small"
-            android:text="+"
-            android:textSize="20sp"/>
+            android:shadowColor="#7A7A7A"
+            android:shadowDx="5"
+            android:shadowDy="5"
+            android:shadowRadius="5" />
 
         <TextView
             android:id="@+id/txtDicesCount"
@@ -36,11 +43,16 @@
 
         <Button
             android:id="@+id/bntDecrementDice"
+            android:background="@drawable/button_history"
+            android:text="-"
+            android:textColor="#FFFFFF"
+            android:textSize="24sp"
             android:layout_width="80dp"
             android:layout_height="40dp"
-            style="@android:style/Widget.Button.Small"
-            android:text="-"
-            android:textSize="20sp"/>
+            android:shadowColor="#7A7A7A"
+            android:shadowDx="5"
+            android:shadowDy="5"
+            android:shadowRadius="5" />
 
     </LinearLayout>
 
@@ -55,14 +67,15 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:background="#1D65A6">
+        >
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textSize="40sp"
             android:text="@string/shakeToRoll"
             android:textColor="@android:color/white"
-            android:gravity="center"/>
+            android:gravity="center"
+            android:background="@drawable/shaketoroll"/>
 
      <!--   <LinearLayout
             android:layout_width="match_parent"
@@ -95,12 +108,23 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
+
         <Button
             android:id="@+id/btnHistory"
-            android:text="@string/history"
+
+            android:text="History"
+            android:textColor="#FFFFFF"
+            android:textSize="24sp"
+            android:layout_gravity="center"
+
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom"/>
+            android:layout_height="100dp"
+            android:background="@drawable/button_history"
+            android:shadowColor="#7A7A7A"
+            android:shadowDx="5"
+            android:shadowDy="5"
+            android:shadowRadius="5"
+            />
     </LinearLayout>
 
 </LinearLayout>
